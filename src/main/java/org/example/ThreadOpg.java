@@ -59,7 +59,7 @@ class Opg3 implements Runnable {
                 }
                 System.out.println("Temperatur is : " + result);
                 try {
-                    Thread.sleep(2000); // Pauses thread for 1 seconds
+                    Thread.sleep(2000); // Pauses thread for 2 seconds
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -98,7 +98,7 @@ class Opg4 implements Runnable {
             while (true) {
                 System.out.print(ch);
                 try {
-                    Thread.sleep(500); // Pauses thread for 1 seconds
+                    Thread.sleep(500); // Pauses thread for 0.5 seconds
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -167,5 +167,6 @@ public class ThreadOpg {
         t4.start();
 
     }// main END
+
 }// ThreadOpg END
 
