@@ -1,5 +1,6 @@
 package org.example;
 
+// Classes for SynchroOpg1
 class SharedRessource {
     private int resourceAmount = 1000;
 
@@ -93,37 +94,84 @@ class RessourceChecker implements Runnable {
 
 }// RessourceChecker END
 
+// Classes for SynchroOpg2
 class PrinterThread implements Runnable {
-    private char ch;
+    private static final Object lock = new Object();
+    private final char ch;
 
     public PrinterThread(char ch) {
         this.ch = ch;
     }
 
     @Override
-    public synchronized void run() {
-        if (ch == '#') {
-            pauseFor(25);// Pauses thread for 0.025 second to create an offset
-        }
+    public void run() {
+        synchronized (lock) {
+            while (true) {
 
-        while (true) {
-            for (int i = 1; i < 60; i++) {
-                System.out.print(ch);
+                try {
+                    for (int i = 1; i <= 60; i++) {
+                        System.out.print(ch);
+                    }
+                    System.out.println();
+
+                    lock.notify(); // Notify the other thread
+                    lock.wait(); // Wait for the other thread to finish
+
+                    // Since notify() is called before wait(), deadlocks are avoided
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            System.out.println();
-            pauseFor(50);// Pauses thread for 0.050 seconds to allow the offset
-        }
-    }
-
-    public void pauseFor(int milliSeconds) {
-        try {
-            Thread.sleep(milliSeconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
 }// PrinterThread END
+
+// Classes for Selvstudie
+class SharedThreadCounter {
+    private int turnCcounter = 0;
+
+
+}
+
+class TurnOrderedPrinter implements Runnable {
+    private static final Object SpecificLock = new Object();
+    private static int turn = 0; // Controls printing sequence, 0 starts
+
+    private final char ch;
+    private final int myTurn; // Thread's assigned turn
+
+    public TurnOrderedPrinter(char ch, int myTurn) {
+        this.ch = ch;
+        this.myTurn = myTurn;
+    }
+
+    @Override
+    public void run() {
+        synchronized (SpecificLock) {
+            do  {
+                try {
+                    for (int i = 0; i < 60; i++) {
+                        System.out.print(ch);
+                    }
+                    System.out.println();
+                    turn = (myTurn + 1)%4; // Move to the next thread, becomes 0 via modulus if divided by 4
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    SpecificLock.notifyAll(); // Wake up all threads
+
+                    SpecificLock.wait(); // Wait until it's this thread's turn again
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } while (turn == myTurn);
+        }
+    }
+}
 
 
 public class SynchroOpg {
@@ -142,12 +190,24 @@ public class SynchroOpg {
 
         // Opgave 2
         //Opret en Java-applikation med to tråde, hvor den ene tråd udskriver stjerner (*) og den anden udskriver havelåger (#) til konsollen.
-
+        /*
         Thread t3 = new Thread(new PrinterThread('*'));
         Thread t4 = new Thread(new PrinterThread('#'));
-
         t3.start();
         t4.start();
+        */
+
+        // Opgave 3 Selvstudie med flere tråde samt kontrol af threads kørselsorden
+        Thread t5 = new Thread(new TurnOrderedPrinter('*', 0));
+        Thread t6 = new Thread(new TurnOrderedPrinter('#', 1));
+        Thread t7 = new Thread(new TurnOrderedPrinter('%', 2));
+        Thread t8 = new Thread(new TurnOrderedPrinter('¤', 3));
+
+        t5.start();
+        t6.start();
+        t7.start();
+        t8.start();
+
 
     }// main END
 
